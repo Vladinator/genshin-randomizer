@@ -1,19 +1,22 @@
 import React from 'react';
 import {
-  TableContainer,
+  Autocomplete,
+  Grid2,
+  IconButton,
   Paper,
   Table,
+  TableBody,
+  TableCell,
+  TableContainer,
   TableHead,
   TableRow,
-  TableCell,
-  TableBody,
-  IconButton,
   TextField,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteIcon from '@mui/icons-material/Delete';
-import type { Session, Team, Character } from '../types';
+import type { Session, Team, Character } from '../../types';
+import { Locale } from '../../locale';
 
 const CharacterCellContents: React.FC<Session & { team: Team; character: Character }> = ({
   manager,
@@ -21,24 +24,50 @@ const CharacterCellContents: React.FC<Session & { team: Team; character: Charact
   team,
   character,
 }): JSX.Element => {
+  const characters = manager.getCharacters(true);
+  const value = characters.find((o) => o.name === character.name);
+  // TODO: `MUI: A component is changing the uncontrolled value state of Autocomplete to be controlled.`
   return (
     <>
-      <TextField
-        value={character.name}
-        onChange={(e) => {
-          character.name = e.target.value;
+      <Autocomplete
+        disablePortal
+        options={characters}
+        getOptionKey={(option) => option.id}
+        getOptionLabel={(option) => option.name}
+        value={value}
+        onChange={(_, newValue) => {
+          if (!newValue) {
+            return;
+          }
+          character.name = newValue.name;
           updateManager();
         }}
-        variant='standard'
+        renderInput={(params) => (
+          <Grid2>
+            <TextField
+              //
+              {...params}
+              variant='standard'
+              size='small'
+              fullWidth={false}
+              style={{ minWidth: 200 }}
+            />
+            <IconButton
+              onClick={() => {
+                manager.removeTeamCharacter(team, character);
+                updateManager();
+              }}>
+              <RemoveIcon />
+            </IconButton>
+          </Grid2>
+        )}
+        disableClearable={true}
+        autoComplete={true}
+        disableListWrap={true}
+        openOnFocus={false}
+        blurOnSelect={true}
+        clearOnBlur={true}
       />
-      <IconButton
-        aria-label={`delete character ${character.name}`}
-        onClick={() => {
-          manager.removeCharacter(team, character);
-          updateManager();
-        }}>
-        <RemoveIcon />
-      </IconButton>
     </>
   );
 };
@@ -50,9 +79,9 @@ const CharacterCellAddContents: React.FC<Session & { team: Team }> = ({
 }): JSX.Element => {
   return (
     <IconButton
-      aria-label={`add character to ${team.player.name}`}
+      aria-label={Locale.get('Players.AddCharacterToTeam', team.player.name)}
       onClick={() => {
-        manager.addCharacter(team, '');
+        manager.addTeamCharacter(team, '');
         updateManager();
       }}>
       <AddIcon />
@@ -66,7 +95,7 @@ export const PlayersTable: React.FC<Session> = (props): JSX.Element => {
   const numRows = 1 + teams.reduce((pv, cv) => (pv > cv.characters.length ? pv : cv.characters.length), 0);
   return (
     <TableContainer component={Paper} variant='outlined'>
-      <Table aria-label='players table'>
+      <Table aria-label={Locale.get('Players.Players')} size='small'>
         <TableHead>
           <TableRow>
             {teams.map((team) => (
@@ -78,9 +107,10 @@ export const PlayersTable: React.FC<Session> = (props): JSX.Element => {
                     updateManager();
                   }}
                   variant='standard'
+                  size='small'
                 />
                 <IconButton
-                  aria-label='delete player'
+                  aria-label={Locale.get('Players.DeletePlayer')}
                   onClick={() => {
                     manager.removeTeam(team);
                     updateManager();
@@ -91,7 +121,7 @@ export const PlayersTable: React.FC<Session> = (props): JSX.Element => {
             ))}
             <TableCell>
               <IconButton
-                aria-label='new player'
+                aria-label={Locale.get('Players.NewPlayer')}
                 onClick={() => {
                   manager.addTeam('Player');
                   updateManager();
@@ -115,6 +145,7 @@ export const PlayersTable: React.FC<Session> = (props): JSX.Element => {
                   )}
                 </TableCell>
               ))}
+              <TableCell />
             </TableRow>
           ))}
         </TableBody>

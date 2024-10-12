@@ -1,11 +1,13 @@
 import React from 'react';
-import './index.css';
-import Alert from '@mui/material/Alert';
+import { Grid2 } from '@mui/material';
 import type { AlertMessage, Session } from '../types';
+import { Locale } from '../locale';
+import { AlertBlock } from './components/alertblock';
+import { ImportExportButtons } from './components/importexport';
+import { PlayersTable } from './components/players';
+import { Randomizer } from './components/randomizer';
+import { SettingsToggle } from './components/settingstoggle';
 import { Manager } from './manager';
-import { PlayersTable } from './players';
-import { ImportExportButtons } from './importexport';
-import { copyToClipboard } from './utils';
 
 export default function App() {
   const [message, setMessage] = React.useState<AlertMessage | undefined>();
@@ -24,32 +26,16 @@ export default function App() {
       }
     },
   };
-  React.useEffect(() => {
-    if (!message || message.timeout === undefined) return;
-    const handle = setTimeout(() => setMessage(undefined), message?.timeout ?? 0);
-    return () => handle && clearTimeout(handle);
-  }, [message]);
   return (
     <main>
-      <h1>Genshin Randomizer</h1>
-      {message && (
-        <Alert severity={message.type} onClose={message.noCloseButton ? undefined : () => setMessage(undefined)}>
-          {message.text}
-          {message.copyableData && message.copyableData.length ? (
-            <code
-              style={{ display: 'block', cursor: 'pointer' }}
-              onClick={() => copyToClipboard(message.copyableData).then((o) => o === true && setMessage(undefined))}>
-              {message.copyableData}
-            </code>
-          ) : (
-            <></>
-          )}
-        </Alert>
-      )}
+      <h1>{Locale.get('GenshinRandomizer')}</h1>
+      {message && <AlertBlock message={message} onClose={() => setMessage(undefined)} />}
       <PlayersTable {...session} />
-      <div style={{ float: 'right' }}>
+      <Grid2 display={'flex'} flexDirection={'row-reverse'}>
+        <SettingsToggle {...session} />
         <ImportExportButtons {...session} />
-      </div>
+      </Grid2>
+      <Randomizer {...session} />
     </main>
   );
 }

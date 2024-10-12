@@ -88,8 +88,19 @@ const recursiveRandomId = (target: unknown): void => {
 };
 
 export const inflatePayload = (payload: PayloadMinimal): PayloadFull => {
-  recursiveRandomId(payload.teams);
+  const { bosses, characters, teams } = payload;
+  recursiveRandomId(bosses);
+  recursiveRandomId(characters);
+  recursiveRandomId(teams);
   return payload as never;
+};
+
+const unsetIgnoredProps = <T extends { ignore?: boolean }>(props: T[]): void => {
+  for (const prop of props) {
+    if (!prop.ignore) {
+      prop.ignore = undefined as never;
+    }
+  }
 };
 
 export const exportPayload = (data: PayloadFull | PayloadMinimal): string | undefined => {
@@ -97,7 +108,10 @@ export const exportPayload = (data: PayloadFull | PayloadMinimal): string | unde
   if (!results.success) {
     return;
   }
-  return toCopyString(results.data);
+  const payload = results.data;
+  unsetIgnoredProps(payload.bosses);
+  unsetIgnoredProps(payload.characters);
+  return toCopyString(payload);
 };
 
 export const copyToClipboard = async (data?: string): Promise<boolean | Error> => {

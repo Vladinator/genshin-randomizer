@@ -1,6 +1,8 @@
-import type { Setting, Team } from '../types';
+import type { ToggleBoss, ToggleCharacter, Setting, Team } from '../types';
 
 const settingsKey = 'settings';
+const bossesKey = 'bosses';
+const charactersKey = 'characters';
 const teamsKey = 'teams';
 
 export class Storage {
@@ -28,6 +30,22 @@ export class Storage {
 
   public static setSettings(settings: Setting[]) {
     return this.write(settingsKey, settings, true);
+  }
+
+  public static getBosses(): ToggleBoss[] | undefined {
+    return this.read(bossesKey, true);
+  }
+
+  public static setBosses(bosses: ToggleBoss[]) {
+    return this.write(bossesKey, bosses, true);
+  }
+
+  public static getCharacters(): ToggleCharacter[] | undefined {
+    return this.read(charactersKey, true);
+  }
+
+  public static setCharacters(characters: ToggleCharacter[]) {
+    return this.write(charactersKey, characters, true);
   }
 
   public static getTeams(): Team[] | undefined {

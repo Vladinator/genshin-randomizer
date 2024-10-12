@@ -1,50 +1,156 @@
-import type { UUID, Setting, Player, Character, Team } from '../types';
+import type { UUID, Setting, ToggleBoss, ToggleCharacter, Player, Character, Team } from '../types';
+import { Bosses, Characters } from '../game';
 import { Storage } from './storage';
 import { randomUUID, importPayload, inflatePayload, exportPayload } from './utils';
 
+const DefaultSettings: Setting[] = [];
+
+const DefaultBosses: ToggleBoss[] = Bosses.map((name) => ({ id: randomUUID(), ignore: false, name }));
+
+const DefaultCharacters: ToggleCharacter[] = Characters.map((name) => ({ id: randomUUID(), ignore: false, name }));
+
+const DefaultTeams: Team[] = [];
+
+const isNotIgnored = (item: ToggleBoss | ToggleCharacter): boolean => {
+  return item.ignore !== true;
+};
+
 class IManager {
   private settings: Setting[];
+  private bosses: ToggleBoss[];
+  private characters: ToggleCharacter[];
   private teams: Team[];
 
   constructor() {
     this.settings = [];
+    this.bosses = [];
+    this.characters = [];
     this.teams = [];
     this.load();
   }
 
   public load() {
-    this.settings = Storage.getSettings() ?? [];
-    this.teams = Storage.getTeams() ?? [];
+    this.settings = Storage.getSettings() ?? DefaultSettings;
+    this.bosses = Storage.getBosses() ?? DefaultBosses;
+    this.characters = Storage.getCharacters() ?? DefaultCharacters;
+    this.teams = Storage.getTeams() ?? DefaultTeams;
   }
 
   public save() {
-    Storage.setSettings(this.settings);
-    Storage.setTeams(this.teams);
+    const { settings, bosses, characters, teams } = this;
+    Storage.setSettings(settings);
+    Storage.setBosses(bosses);
+    Storage.setCharacters(characters);
+    Storage.setTeams(teams);
   }
 
   public import(raw: string): boolean {
-    const data = importPayload(raw);
+    const data = importPayload(raw.trim());
     if (!data) {
       return false;
     }
-    const { settings, teams } = inflatePayload(data);
+    const { settings, bosses, characters, teams } = inflatePayload(data);
     Storage.setSettings(settings);
+    Storage.setBosses(bosses);
+    Storage.setCharacters(characters);
     Storage.setTeams(teams);
     this.load();
     return true;
   }
 
   public export(): string {
-    return (
-      exportPayload({
-        settings: this.settings,
-        teams: this.teams,
-      }) ?? ''
-    );
+    const { settings, bosses, characters, teams } = this;
+    return exportPayload({ settings, bosses, characters, teams }) ?? '';
+  }
+
+  public getSettings(): Setting[] {
+    return this.settings;
+  }
+
+  public getBosses(skipIgnored?: boolean): ToggleBoss[] {
+    if (skipIgnored) {
+      return this.bosses.filter(isNotIgnored);
+    }
+    return this.bosses;
+  }
+
+  public getCharacters(skipIgnored?: boolean): ToggleCharacter[] {
+    if (skipIgnored) {
+      return this.characters.filter(isNotIgnored);
+    }
+    return this.characters;
   }
 
   public getTeams(): Team[] {
     return this.teams;
+  }
+
+  public createBoss(name: string, ignore?: boolean): ToggleBoss {
+    return {
+      id: randomUUID(),
+      name,
+      ignore: !!ignore,
+    };
+  }
+
+  public createCharacter(name: string, ignore?: boolean): ToggleCharacter {
+    return {
+      id: randomUUID(),
+      name,
+      ignore: !!ignore,
+    };
+  }
+
+  public addBoss(name: string, ignore?: boolean): ToggleBoss {
+    const boss = this.createBoss(name, ignore);
+    this.bosses.push(boss);
+    return boss;
+  }
+
+  public removeBoss(boss: ToggleBoss): boolean;
+  public removeBoss(bossUUID: UUID): boolean;
+
+  public removeBoss(boss: ToggleBoss | UUID): boolean {
+    const { bosses } = this;
+    if (typeof boss === 'string') {
+      const temp = bosses.find((o) => o.id === boss);
+      if (!temp) {
+        return false;
+      }
+      boss = temp;
+    }
+    const index = bosses.indexOf(boss);
+    if (index > -1) {
+      bosses.splice(index, 1);
+      return true;
+    }
+    return false;
+  }
+
+  public addCharacter(name: string, ignore?: boolean): ToggleCharacter {
+    const character = this.createCharacter(name, ignore);
+    this.characters.push(character);
+    return character;
+  }
+
+  public removeCharacter(character: ToggleCharacter): boolean;
+  public removeCharacter(characterUUID: UUID): boolean;
+
+  public removeCharacter(character: ToggleBoss | UUID): boolean {
+    const { characters } = this;
+    if (typeof character === 'string') {
+      const temp = characters.find((o) => o.id === character);
+      if (!temp) {
+        return false;
+      }
+      character = temp;
+    }
+    const index = characters.indexOf(character);
+    if (index > -1) {
+      characters.splice(index, 1);
+      return true;
+    }
+    return false;
   }
 
   private createTeam(name: string): Team {
@@ -62,7 +168,7 @@ class IManager {
     };
   }
 
-  private createCharacter(name: string): Character {
+  private createTeamCharacter(name: string): Character {
     return {
       id: randomUUID(),
       name,
@@ -82,7 +188,7 @@ class IManager {
   public removeTeam(team: Team | UUID): boolean {
     const { teams } = this;
     if (typeof team === 'string') {
-      let temp = teams.find((o) => o.id === team) ?? teams.find((o) => o.player.id === team);
+      const temp = teams.find((o) => o.id === team) ?? teams.find((o) => o.player.id === team);
       if (!temp) {
         return false;
       }
@@ -96,13 +202,13 @@ class IManager {
     return false;
   }
 
-  public addCharacter(team: Team, name: string): Character {
-    const character = this.createCharacter(name);
+  public addTeamCharacter(team: Team, name: string): Character {
+    const character = this.createTeamCharacter(name);
     team.characters.push(character);
     return character;
   }
 
-  public removeCharacter(team: Team, character: Character | UUID): boolean {
+  public removeTeamCharacter(team: Team, character: Character | UUID): boolean {
     const { characters } = team;
     if (typeof character === 'string') {
       let temp = characters.find((o) => o.id === character);
