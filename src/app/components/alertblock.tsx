@@ -1,13 +1,22 @@
 import React from 'react';
 import Alert from '@mui/material/Alert';
 import type { AlertMessage } from '../../types';
-import { copyToClipboard } from '../utils';
 
-export const AlertBlock: React.FC<{ message: AlertMessage; onClose: () => void }> = ({
+const floating: React.CSSProperties = {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  paddingTop: 15,
+  paddingBottom: 15,
+};
+
+export const AlertBlock: React.FC<{ fixed?: boolean; message: AlertMessage; onClose: () => void }> = ({
+  fixed,
   message,
   onClose,
 }): JSX.Element => {
-  const { text, type, timeout, noCloseButton, copyableData } = message;
+  const { text, type, timeout, noCloseButton } = message;
   React.useEffect(() => {
     if (timeout === undefined) return;
     const handle = setTimeout(onClose, timeout);
@@ -17,17 +26,9 @@ export const AlertBlock: React.FC<{ message: AlertMessage; onClose: () => void }
     <Alert
       //
       severity={type}
-      onClose={noCloseButton ? undefined : onClose}>
+      onClose={noCloseButton ? undefined : onClose}
+      style={fixed !== false ? floating : undefined}>
       {text}
-      {copyableData && copyableData.length ? (
-        <code
-          style={{ display: 'block', cursor: 'pointer' }}
-          onClick={() => copyToClipboard(message.copyableData).then((o) => o === true && onClose())}>
-          {message.copyableData}
-        </code>
-      ) : (
-        <></>
-      )}
     </Alert>
   );
 };

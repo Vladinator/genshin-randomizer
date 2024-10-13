@@ -21,11 +21,15 @@ import { Locale } from '../../locale';
 const CharacterCellContents: React.FC<Session & { team: Team; character: Character }> = ({
   manager,
   updateManager,
+  editing,
   team,
   character,
 }): JSX.Element => {
   const characters = manager.getCharacters(true);
   const value = characters.find((o) => o.name === character.name);
+  if (!editing) {
+    return <>{value?.name}</>;
+  }
   // TODO: `MUI: A component is changing the uncontrolled value state of Autocomplete to be controlled.`
   return (
     <>
@@ -54,6 +58,7 @@ const CharacterCellContents: React.FC<Session & { team: Team; character: Charact
             />
             <IconButton
               onClick={() => {
+                if (!window.confirm(Locale.get('Confirm.Delete', character.name))) return;
                 manager.removeTeamCharacter(team, character);
                 updateManager();
               }}>
@@ -90,9 +95,10 @@ const CharacterCellAddContents: React.FC<Session & { team: Team }> = ({
 };
 
 export const PlayersTable: React.FC<Session> = (props): JSX.Element => {
-  const { manager, updateManager } = props;
+  const { manager, updateManager, editing } = props;
   const teams = manager.getTeams();
-  const numRows = 1 + teams.reduce((pv, cv) => (pv > cv.characters.length ? pv : cv.characters.length), 0);
+  const numRows =
+    (editing ? 1 : 0) + teams.reduce((pv, cv) => (pv > cv.characters.length ? pv : cv.characters.length), 0);
   return (
     <TableContainer component={Paper} variant='outlined'>
       <Table aria-label={Locale.get('Players.Players')} size='small'>
@@ -100,35 +106,46 @@ export const PlayersTable: React.FC<Session> = (props): JSX.Element => {
           <TableRow>
             {teams.map((team) => (
               <TableCell key={team.id}>
-                <TextField
-                  value={team.player.name}
-                  onChange={(e) => {
-                    team.player.name = e.target.value;
-                    updateManager();
-                  }}
-                  variant='standard'
-                  size='small'
-                />
-                <IconButton
-                  aria-label={Locale.get('Players.DeletePlayer')}
-                  onClick={() => {
-                    manager.removeTeam(team);
-                    updateManager();
-                  }}>
-                  <DeleteIcon />
-                </IconButton>
+                {editing ? (
+                  <>
+                    <TextField
+                      value={team.player.name}
+                      onChange={(e) => {
+                        team.player.name = e.target.value;
+                        updateManager();
+                      }}
+                      variant='standard'
+                      size='small'
+                    />
+                    <IconButton
+                      aria-label={Locale.get('Players.DeletePlayer')}
+                      onClick={() => {
+                        if (!window.confirm(Locale.get('Confirm.Delete', team.player.name))) return;
+                        manager.removeTeam(team);
+                        updateManager();
+                      }}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </>
+                ) : (
+                  <>{team.player.name}</>
+                )}
               </TableCell>
             ))}
-            <TableCell>
-              <IconButton
-                aria-label={Locale.get('Players.NewPlayer')}
-                onClick={() => {
-                  manager.addTeam('Player');
-                  updateManager();
-                }}>
-                <AddIcon />
-              </IconButton>
-            </TableCell>
+            {editing ? (
+              <TableCell>
+                <IconButton
+                  aria-label={Locale.get('Players.NewPlayer')}
+                  onClick={() => {
+                    manager.addTeam('Player');
+                    updateManager();
+                  }}>
+                  <AddIcon />
+                </IconButton>
+              </TableCell>
+            ) : (
+              <></>
+            )}
           </TableRow>
         </TableHead>
         <TableBody>
@@ -137,9 +154,11 @@ export const PlayersTable: React.FC<Session> = (props): JSX.Element => {
               {teams.map((team) => (
                 <TableCell key={`${team.id}`}>
                   {team.characters[index] ? (
-                    <CharacterCellContents {...props} team={team} character={team.characters[index]} />
+                    <>
+                      <CharacterCellContents {...props} team={team} character={team.characters[index]} />
+                    </>
                   ) : !temp[team.id as never] && (temp[team.id as never] = true) ? (
-                    <CharacterCellAddContents {...props} team={team} />
+                    <>{editing ? <CharacterCellAddContents {...props} team={team} /> : <></>}</>
                   ) : (
                     <></>
                   )}

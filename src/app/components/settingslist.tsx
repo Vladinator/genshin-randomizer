@@ -8,7 +8,7 @@ import type { Session, ToggleBoss, ToggleCharacter } from '../../types';
 import { Locale } from '../../locale';
 
 type SettingsListProps<T = ToggleBoss | ToggleCharacter> = Session & {
-  header: string;
+  header?: string;
   items: T[];
   showToggle?: boolean;
   showRemove?: boolean;
@@ -34,7 +34,7 @@ export const SettingsList: React.FC<SettingsListProps> = ({
   return (
     <Box>
       <Grid2 container={true} direction={'column'}>
-        <div style={{ paddingLeft: 15 }}>{header}</div>
+        {header && <div style={{ paddingLeft: 15 }}>{header}</div>}
         <List dense={true}>
           {items.map((item) => (
             <ListItem

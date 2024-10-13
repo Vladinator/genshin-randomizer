@@ -1,6 +1,12 @@
 const DefaultLanguage = {
   GenshinRandomizer: 'Genshin Randomizer',
+  Tabs: {
+    Players: 'Players',
+    Randomizer: 'Randomizer',
+  },
   ImportExport: {
+    Export: 'Export',
+    Import: 'Import',
     ExportClipboardError: `Import string couldn't be stored in your clipboard. Something went wrong!`,
     ExportClipboardSuccess: 'Import string stored in clipboard. Paste it somewhere safe!',
     ImportPasteHere: 'Paste import string here:',
@@ -13,6 +19,7 @@ const DefaultLanguage = {
     Characters: 'Characters',
   },
   Players: {
+    Edit: 'Edit',
     Delete: 'Delete',
     Exclude: 'Exclude',
     Include: 'Include',
@@ -21,6 +28,14 @@ const DefaultLanguage = {
     AddCharacterToTeam: 'Add character to team {}',
     DeletePlayer: 'Delete player',
     NewPlayer: 'New player',
+  },
+  Randomize: {
+    Randomize: 'Randomize',
+    Lock: 'Lock',
+    Unlock: 'Unlock',
+  },
+  Confirm: {
+    Delete: 'Are you sure you want to delete {}?',
   },
 } as const;
 

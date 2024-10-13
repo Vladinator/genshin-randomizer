@@ -2,9 +2,9 @@ import React from 'react';
 import { Button } from '@mui/material';
 import FileOpenIcon from '@mui/icons-material/FileOpen';
 import SaveIcon from '@mui/icons-material/Save';
+import { Locale } from '../../locale';
 import type { Session } from '../../types';
 import { copyToClipboard } from '../utils';
-import { Locale } from '../../locale';
 
 export const ImportExportButtons: React.FC<Session> = ({ manager, updateManager, setMessage }): JSX.Element => {
   return (
@@ -28,7 +28,7 @@ export const ImportExportButtons: React.FC<Session> = ({ manager, updateManager,
           });
         }}>
         <SaveIcon />
-        Export
+        {Locale.get('ImportExport.Export')}
       </Button>
       <Button
         variant='text'
@@ -48,7 +48,7 @@ export const ImportExportButtons: React.FC<Session> = ({ manager, updateManager,
           setMessage({ text: Locale.get('ImportExport.ImportSuccess'), type: 'success', timeout: 3000 });
         }}>
         <FileOpenIcon />
-        Import
+        {Locale.get('ImportExport.Import')}
       </Button>
     </>
   );

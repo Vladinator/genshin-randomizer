@@ -1,28 +1,89 @@
 import React from 'react';
-import { Button } from '@mui/material';
-import type { Session } from '../../types';
-import { IRandomizer } from '../randomizer';
+import { Button, Checkbox, FormGroup, FormControlLabel } from '@mui/material';
+import type { Session, ToggleBoss, Team } from '../../types';
+import { type IRandomizerOutcome, IRandomizer } from '../randomizer';
+import { Locale } from '../../locale';
 
-export const Randomizer: React.FC<Session> = (props): JSX.Element => {
-  const { manager } = props;
-  const [state, setState] = React.useState({ randomizer: IRandomizer.create(manager) });
+const RandomizerOutcome: React.FC<{
+  outcome: IRandomizerOutcome;
+  randomizer: IRandomizer;
+  updateRandomizer: () => void;
+}> = ({ outcome, randomizer, updateRandomizer }): JSX.Element => {
+  const { bosses, teams } = outcome;
+  const OutcomeCheckbox: React.FC<{ boss?: ToggleBoss; team?: Team }> = ({ boss, team }): JSX.Element => {
+    const unlockText = Locale.get('Randomize.Unlock');
+    const lockText = Locale.get('Randomize.Lock');
+    return (
+      <FormControlLabel
+        control={
+          boss ? (
+            <Checkbox
+              inputProps={{ 'aria-label': randomizer.isBossLocked(boss) ? unlockText : lockText }}
+              defaultChecked={!!randomizer.isBossLocked(boss)}
+              onChange={(e) => {
+                randomizer.toggleBoss(boss, e.target.checked);
+                updateRandomizer();
+              }}
+            />
+          ) : team ? (
+            <Checkbox
+              inputProps={{ 'aria-label': randomizer.isTeamLocked(team) ? unlockText : lockText }}
+              defaultChecked={!!randomizer.isTeamLocked(team)}
+              onChange={(e) => {
+                randomizer.toggleTeam(team, e.target.checked);
+                updateRandomizer();
+              }}
+            />
+          ) : (
+            <></>
+          )
+        }
+        label={
+          boss ? (
+            <span>{boss.name}</span>
+          ) : team ? (
+            <span>
+              {team.player.name} — {team.characters.map((o) => o.name).join(', ')}
+            </span>
+          ) : (
+            <></>
+          )
+        }
+      />
+    );
+  };
   return (
-    <Button
-      onClick={() => {
-        const { randomizer } = state;
-        const bosses = randomizer.getBosses();
-        const characters = randomizer.getCharacters();
-        const teams = randomizer.getTeams();
-        randomizer.toggleBoss(bosses[0]);
-        randomizer.toggleCharacter(characters[0]);
-        randomizer.toggleTeam(teams[0]);
-        console.warn(bosses, randomizer.isBossLocked(bosses[0]));
-        console.warn(characters, randomizer.isCharacterLocked(characters[0]));
-        console.warn(teams, randomizer.isTeamLocked(teams[0]));
-        setState({ randomizer });
-      }}
-      variant='contained'>
-      Randomize
-    </Button>
+    <FormGroup>
+      {bosses.map((o) => (
+        <OutcomeCheckbox key={o.id} boss={o} />
+      ))}
+      {teams.map((o) => (
+        <OutcomeCheckbox key={o.id} team={o} />
+      ))}
+    </FormGroup>
+  );
+};
+
+export const Randomizer: React.FC<Session> = ({ manager, randomizer }): JSX.Element => {
+  const [outcomes, setOutcomes] = React.useState(randomizer.getOutcomes());
+  return (
+    <>
+      <Button
+        onClick={() => {
+          randomizer.load(manager);
+          const outcomes = randomizer.randomize();
+          setOutcomes(outcomes);
+        }}
+        variant='contained'>
+        {Locale.get('Randomize.Randomize')}
+      </Button>
+      {outcomes.length ? (
+        outcomes.map((outcome) => (
+          <RandomizerOutcome key={outcome.id} outcome={outcome} randomizer={randomizer} updateRandomizer={() => {}} />
+        ))
+      ) : (
+        <></>
+      )}
+    </>
   );
 };

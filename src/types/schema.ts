@@ -1,14 +1,37 @@
 import type { AlertColor } from '@mui/material';
 import { z } from 'zod';
 import { Manager } from '../app/manager';
+import { IRandomizer } from '../app/randomizer';
 
 export type UUID = `${string}-${string}-${string}-${string}-${string}`;
 
 export const schemaUUID = z.string().uuid();
 
+export const settingKeys = [
+  'allowDuplicateBosses',
+  'allowDuplicatePlayers',
+  'allowDuplicateCharacters',
+  'numSessions',
+  'numBossesPerSession',
+  'numTeamsPerSession',
+] as const;
+
+const schemaSettingKeys = z.union([
+  z.literal(settingKeys[0]),
+  z.literal(settingKeys[1]),
+  z.literal(settingKeys[2]),
+  z.literal(settingKeys[3]),
+  z.literal(settingKeys[4]),
+  z.literal(settingKeys[5]),
+]);
+
+if (settingKeys.length !== schemaSettingKeys._def.options.length) {
+  throw Error(`Schema setting keys array and zod union are not equal!`);
+}
+
 export const schemaSetting = z.object({
-  key: z.string(),
-  value: z.any(),
+  key: schemaSettingKeys,
+  value: z.number(),
 });
 
 export const schemaID = z.object({
@@ -70,6 +93,8 @@ export const schemaPayloadMinimal = z.object({
 
 export type Setting = z.infer<typeof schemaSetting>;
 
+export type SettingKVP = Record<Setting['key'], Setting['value']>;
+
 export type ToggleBoss = z.infer<typeof schemaIgnoreNameID>;
 
 export type ToggleCharacter = z.infer<typeof schemaIgnoreNameID>;
@@ -88,12 +113,14 @@ export type AlertMessage = {
   text: string;
   type?: AlertColor;
   timeout?: number;
-  copyableData?: string;
   noCloseButton?: boolean;
 };
 
 export type Session = {
   manager: typeof Manager;
+  randomizer: IRandomizer;
+  editing: boolean;
   updateManager: (value: React.SetStateAction<void>) => void;
+  updateEditing: (value: boolean) => void;
   setMessage: (message: AlertMessage) => void;
 };

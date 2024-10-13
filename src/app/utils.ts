@@ -125,3 +125,7 @@ export const copyToClipboard = async (data?: string): Promise<boolean | Error> =
     return ex as Error;
   }
 };
+
+export const randomInt = (max: number) => {
+  return Math.floor(Math.random() * max);
+};

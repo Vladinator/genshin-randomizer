@@ -3,7 +3,15 @@ import { Bosses, Characters } from '../game';
 import { Storage } from './storage';
 import { randomUUID, importPayload, inflatePayload, exportPayload } from './utils';
 
-const DefaultSettings: Setting[] = [];
+const DefaultSettings: Setting[] = [
+  //
+  { key: 'allowDuplicateBosses', value: 0 },
+  { key: 'allowDuplicatePlayers', value: 0 },
+  { key: 'allowDuplicateCharacters', value: 0 },
+  { key: 'numSessions', value: 1 },
+  { key: 'numBossesPerSession', value: 1 },
+  { key: 'numTeamsPerSession', value: 4 },
+];
 
 const DefaultBosses: ToggleBoss[] = Bosses.map((name) => ({ id: randomUUID(), ignore: false, name }));
 

@@ -1,28 +1,68 @@
-import type { Team, ToggleBoss, ToggleCharacter } from '../types';
+import {
+  type UUID,
+  type Setting,
+  type SettingKVP,
+  type ToggleBoss,
+  type ToggleCharacter,
+  type Team,
+  type Character,
+  settingKeys,
+} from '../types';
 import { Manager } from './manager';
+import { randomInt, randomUUID } from './utils';
+
+export type IRandomizerOutcome = {
+  id: UUID;
+  bosses: ToggleBoss[];
+  teams: Team[];
+};
 
 export class IRandomizer {
+  private settings: Setting[];
   private bosses: ToggleBoss[];
   private characters: ToggleCharacter[];
   private teams: Team[];
   private lockedBosses: ToggleBoss[];
   private lockedCharacters: ToggleCharacter[];
   private lockedTeams: Team[];
+  private outcomes: IRandomizerOutcome[];
 
-  constructor(bosses: ToggleBoss[], characters: ToggleCharacter[], teams: Team[]) {
-    this.bosses = bosses;
-    this.characters = characters;
-    this.teams = teams;
+  constructor() {
+    this.settings = [];
+    this.bosses = [];
+    this.characters = [];
+    this.teams = [];
     this.lockedBosses = [];
     this.lockedCharacters = [];
     this.lockedTeams = [];
+    this.outcomes = [];
+  }
+
+  public load(manager: typeof Manager): void {
+    this.settings = manager.getSettings();
+    this.bosses = manager.getBosses(true);
+    this.characters = manager.getCharacters(true);
+    this.teams = manager.getTeams();
   }
 
   public static create(manager: typeof Manager): IRandomizer {
-    const bosses = manager.getBosses(true);
-    const characters = manager.getCharacters(true);
-    const teams = manager.getTeams();
-    return new this(bosses, characters, teams);
+    const instance = new this();
+    instance.load(manager);
+    return instance;
+  }
+
+  public getSettings(): Setting[] {
+    return this.settings;
+  }
+
+  public getSettingsKVP(): SettingKVP {
+    const { settings } = this;
+    const items: Partial<SettingKVP> = {};
+    for (const key of settingKeys) {
+      const item = settings.find((o) => o.key === key);
+      items[key] = item ? item.value : 0;
+    }
+    return items as SettingKVP;
   }
 
   public getBosses(): ToggleBoss[] {
@@ -134,5 +174,167 @@ export class IRandomizer {
     } else {
       this.unlockTeam(team);
     }
+  }
+
+  public getOutcomes(): IRandomizerOutcome[] {
+    return this.outcomes;
+  }
+
+  public randomize(): IRandomizerOutcome[] {
+    const settings = this.getSettingsKVP();
+    const outcomes: IRandomizerOutcome[] = [...this.outcomes];
+    for (let i = 0; i < settings.numSessions; i++) {
+      let outcome = outcomes[i];
+      if (!outcome) {
+        outcome = {} as never;
+        outcomes[i] = outcome;
+      }
+      this.randomizeSession(settings, outcome);
+    }
+    this.outcomes = outcomes;
+    return outcomes;
+  }
+
+  private isOutcomeSafe(outcome: Partial<IRandomizerOutcome>): outcome is IRandomizerOutcome {
+    return 'id' in outcome && 'bosses' in outcome && 'teams' in outcome;
+  }
+
+  private removeUnlocked<T>(items: T[], predicate: (item: T) => T | undefined): void {
+    for (let i = items.length - 1; i >= 0; i--) {
+      const item = items[i];
+      if (predicate(item)) {
+        continue;
+      }
+      items[i] = undefined as never;
+    }
+  }
+
+  private randomizeSession(settings: SettingKVP, outcome: Partial<IRandomizerOutcome>) {
+    if (!outcome.id) outcome.id = randomUUID();
+    if (!outcome.bosses) outcome.bosses = [];
+    if (!outcome.teams) outcome.teams = [];
+    if (!this.isOutcomeSafe(outcome)) throw Error(`Outcome object is not properly initialized!`);
+    const {
+      allowDuplicateBosses,
+      allowDuplicatePlayers,
+      allowDuplicateCharacters,
+      numBossesPerSession,
+      numTeamsPerSession,
+    } = settings;
+    const { bosses, teams } = outcome;
+    this.removeUnlocked(bosses, (o) => this.isBossLocked(o));
+    this.removeUnlocked(teams, (o) => this.isTeamLocked(o));
+    bosses.splice(numBossesPerSession, bosses.length);
+    teams.splice(numTeamsPerSession, teams.length);
+    for (let i = 0; i < numBossesPerSession; i++) {
+      const boss = bosses[i] as ToggleBoss | undefined;
+      if (boss && this.isBossLocked(boss)) {
+        continue;
+      }
+      const temp = this.getRandomBoss(outcome, !!allowDuplicateBosses);
+      if (!temp) {
+        bosses.splice(i + 1, bosses.length);
+        break;
+      }
+      bosses[i] = temp;
+    }
+    for (let i = 0; i < numTeamsPerSession; i++) {
+      const team = teams[i] as Team | undefined;
+      if (team && this.isTeamLocked(team)) {
+        continue;
+      }
+      const temp = this.getRandomTeam(outcome, !!allowDuplicatePlayers, !!allowDuplicateCharacters);
+      if (!temp) {
+        teams.splice(i + 1, teams.length);
+        break;
+      }
+      teams[i] = temp;
+    }
+  }
+
+  private getRandomBoss(outcome: IRandomizerOutcome, dupeBosses: boolean): ToggleBoss | undefined {
+    if (dupeBosses) {
+      return this.bosses[randomInt(this.bosses.length)];
+    }
+    const bosses = outcome.bosses.filter((o) => o);
+    const pool = [...this.bosses];
+    let boss: ToggleBoss | undefined;
+    while (!boss) {
+      if (!pool.length) break;
+      const index = randomInt(pool.length);
+      boss = pool[index];
+      // eslint-disable-next-line no-loop-func
+      if (bosses.find((o) => o.name === boss?.name)) {
+        pool.splice(index, 1);
+        boss = undefined;
+        continue;
+      }
+      break;
+    }
+    return boss;
+  }
+
+  private getRandomTeam(outcome: IRandomizerOutcome, dupePlayers: boolean, dupeCharacters: boolean): Team | undefined {
+    const teams = outcome.teams.filter((o) => o);
+    const pool = [...this.teams];
+    let team: Team | undefined;
+    while (!team) {
+      if (!pool.length) break;
+      const index = randomInt(pool.length);
+      team = pool[index];
+      // eslint-disable-next-line no-loop-func
+      if (!dupePlayers && teams.find((o) => o.player.name === team?.player.name)) {
+        pool.splice(index, 1);
+        team = undefined;
+        continue;
+      }
+      break;
+    }
+    if (!team) {
+      return;
+    }
+    return this.getRandomCharacter(outcome, team, dupeCharacters);
+  }
+
+  private getRandomCharacter(outcome: IRandomizerOutcome, teamRoster: Team, dupeCharacters: boolean): Team {
+    const teamCharacters = teamRoster.characters;
+    const pool = [...this.characters].filter((o) => teamCharacters.find((p) => o.name === p.name));
+    const team = { ...teamRoster };
+    team.characters = [];
+    if (dupeCharacters) {
+      const poolCharacter = pool[randomInt(pool.length)];
+      const character = teamCharacters.find((o) => o.name === poolCharacter.name);
+      if (character) team.characters.push(character);
+      return team;
+    }
+    const allTeamsCharacters = (outcome.teams as (Team | undefined)[]).reduce((pv, cv) => {
+      if (!cv) {
+        return pv;
+      }
+      for (const o of cv.characters) {
+        if (pool.find((p) => p.name === o.name)) {
+          pv.push(o);
+        }
+      }
+      return pv;
+    }, [] as Character[]);
+    let character: Character | undefined;
+    while (!character) {
+      if (!pool.length) break;
+      const index = randomInt(pool.length);
+      character = pool[index];
+      // eslint-disable-next-line no-loop-func
+      if (allTeamsCharacters.find((o) => o.name === character?.name)) {
+        pool.splice(index, 1);
+        character = undefined;
+        continue;
+      }
+      break;
+    }
+    if (!character) {
+      return team;
+    }
+    team.characters.push(character);
+    return team;
   }
 }
