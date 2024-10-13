@@ -1,6 +1,7 @@
 import React from 'react';
 import Alert from '@mui/material/Alert';
 import type { AlertMessage } from '../../types';
+import { Typography } from '@mui/material';
 
 const floating: React.CSSProperties = {
   position: 'absolute',
@@ -23,12 +24,11 @@ export const AlertBlock: React.FC<{ fixed?: boolean; message: AlertMessage; onCl
     return () => handle && clearTimeout(handle);
   }, [timeout, onClose]);
   return (
-    <Alert
-      //
+    <Alert //
       severity={type}
       onClose={noCloseButton ? undefined : onClose}
       style={fixed !== false ? floating : undefined}>
-      {text}
+      <Typography>{text}</Typography>
     </Alert>
   );
 };

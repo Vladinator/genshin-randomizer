@@ -1,9 +1,6 @@
 import React from 'react';
 import { Box, Grid2, IconButton, List, ListItem, TextField } from '@mui/material';
-import ToggleOffIcon from '@mui/icons-material/ToggleOffOutlined';
-import ToggleOnIcon from '@mui/icons-material/ToggleOn';
-import RemoveIcon from '@mui/icons-material/Remove';
-import AddIcon from '@mui/icons-material/Add';
+import { AddIcon, RemoveIcon, ToggleOffIcon, ToggleOnIcon } from './index';
 import type { Session, ToggleBoss, ToggleCharacter } from '../../types';
 import { Locale } from '../../locale';
 
@@ -65,7 +62,8 @@ export const SettingsList: React.FC<SettingsListProps> = ({
                           onRemove(item);
                         }
                         updateManager();
-                      }}>
+                      }}
+                      color='error'>
                       <RemoveIcon />
                     </IconButton>
                   )}
@@ -95,7 +93,8 @@ export const SettingsList: React.FC<SettingsListProps> = ({
                     onAdd();
                   }
                   updateManager();
-                }}>
+                }}
+                color='success'>
                 <AddIcon />
               </IconButton>
             </ListItem>

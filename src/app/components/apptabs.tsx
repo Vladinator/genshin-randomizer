@@ -42,8 +42,7 @@ export const AppTabs: React.FC<{ tabs: AppTab[] }> = ({ tabs }): JSX.Element => 
   return (
     <Box sx={{ width: '100%' }}>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs
-          //
+        <Tabs //
           value={tabIndex}
           onChange={onTabChange}
           aria-label='app tabs'>

@@ -11,10 +11,9 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Typography,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { AddIcon, DeleteIcon, RemoveIcon } from './index';
 import type { Session, Team, Character } from '../../types';
 import { Locale } from '../../locale';
 
@@ -27,8 +26,11 @@ const CharacterCellContents: React.FC<Session & { team: Team; character: Charact
 }): JSX.Element => {
   const characters = manager.getCharacters(true);
   const value = characters.find((o) => o.name === character.name);
+  const hasDuplicates = !manager.getSetting('allowDuplicateCharacters')
+    ? team.characters.filter((o) => o.name === value?.name).length > 1
+    : false;
   if (!editing) {
-    return <>{value?.name}</>;
+    return <Typography color={hasDuplicates ? 'error' : 'textPrimary'}>{value?.name}</Typography>;
   }
   // TODO: `MUI: A component is changing the uncontrolled value state of Autocomplete to be controlled.`
   return (
@@ -48,20 +50,21 @@ const CharacterCellContents: React.FC<Session & { team: Team; character: Charact
         }}
         renderInput={(params) => (
           <Grid2>
-            <TextField
-              //
+            <TextField //
               {...params}
               variant='standard'
               size='small'
               fullWidth={false}
-              style={{ minWidth: 200 }}
+              style={{ minWidth: 222 }}
+              color={hasDuplicates ? 'error' : 'primary'}
             />
             <IconButton
               onClick={() => {
                 if (!window.confirm(Locale.get('Confirm.Delete', character.name))) return;
                 manager.removeTeamCharacter(team, character);
                 updateManager();
-              }}>
+              }}
+              color='error'>
               <RemoveIcon />
             </IconButton>
           </Grid2>
@@ -88,7 +91,8 @@ const CharacterCellAddContents: React.FC<Session & { team: Team }> = ({
       onClick={() => {
         manager.addTeamCharacter(team, '');
         updateManager();
-      }}>
+      }}
+      color='success'>
       <AddIcon />
     </IconButton>
   );
@@ -116,36 +120,46 @@ export const PlayersTable: React.FC<Session> = (props): JSX.Element => {
                       }}
                       variant='standard'
                       size='small'
+                      slotProps={{
+                        input: {
+                          endAdornment: (
+                            <IconButton
+                              aria-label={Locale.get('Players.DeletePlayer')}
+                              onClick={() => {
+                                if (!window.confirm(Locale.get('Confirm.Delete', team.player.name))) return;
+                                manager.removeTeam(team);
+                                updateManager();
+                              }}
+                              color='error'>
+                              <DeleteIcon />
+                            </IconButton>
+                          ),
+                        },
+                      }}
                     />
-                    <IconButton
-                      aria-label={Locale.get('Players.DeletePlayer')}
-                      onClick={() => {
-                        if (!window.confirm(Locale.get('Confirm.Delete', team.player.name))) return;
-                        manager.removeTeam(team);
-                        updateManager();
-                      }}>
-                      <DeleteIcon />
-                    </IconButton>
                   </>
                 ) : (
-                  <>{team.player.name}</>
+                  <Typography>
+                    <strong>{team.player.name}</strong>
+                  </Typography>
                 )}
               </TableCell>
             ))}
-            {editing ? (
-              <TableCell>
+            <TableCell>
+              {editing ? (
                 <IconButton
                   aria-label={Locale.get('Players.NewPlayer')}
                   onClick={() => {
                     manager.addTeam('Player');
                     updateManager();
-                  }}>
+                  }}
+                  color='success'>
                   <AddIcon />
                 </IconButton>
-              </TableCell>
-            ) : (
-              <></>
-            )}
+              ) : (
+                <></>
+              )}
+            </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>

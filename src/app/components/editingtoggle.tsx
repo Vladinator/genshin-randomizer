@@ -1,7 +1,6 @@
 import React from 'react';
 import { Button } from '@mui/material';
-import ToggleOffIcon from '@mui/icons-material/ToggleOffOutlined';
-import ToggleOnIcon from '@mui/icons-material/ToggleOn';
+import { ToggleOffIcon, ToggleOnIcon } from './index';
 import type { Session } from '../../types';
 import { Locale } from '../../locale';
 

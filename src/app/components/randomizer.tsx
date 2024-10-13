@@ -7,8 +7,7 @@ import { Locale } from '../../locale';
 const RandomizerOutcome: React.FC<{
   outcome: IRandomizerOutcome;
   randomizer: IRandomizer;
-  updateRandomizer: () => void;
-}> = ({ outcome, randomizer, updateRandomizer }): JSX.Element => {
+}> = ({ outcome, randomizer }): JSX.Element => {
   const { bosses, teams } = outcome;
   const OutcomeCheckbox: React.FC<{ boss?: ToggleBoss; team?: Team }> = ({ boss, team }): JSX.Element => {
     const unlockText = Locale.get('Randomize.Unlock');
@@ -22,7 +21,6 @@ const RandomizerOutcome: React.FC<{
               defaultChecked={!!randomizer.isBossLocked(boss)}
               onChange={(e) => {
                 randomizer.toggleBoss(boss, e.target.checked);
-                updateRandomizer();
               }}
             />
           ) : team ? (
@@ -31,7 +29,6 @@ const RandomizerOutcome: React.FC<{
               defaultChecked={!!randomizer.isTeamLocked(team)}
               onChange={(e) => {
                 randomizer.toggleTeam(team, e.target.checked);
-                updateRandomizer();
               }}
             />
           ) : (
@@ -40,11 +37,11 @@ const RandomizerOutcome: React.FC<{
         }
         label={
           boss ? (
-            <span>{boss.name}</span>
+            <>{boss.name}</>
           ) : team ? (
-            <span>
+            <>
               {team.player.name} — {team.characters.map((o) => o.name).join(', ')}
-            </span>
+            </>
           ) : (
             <></>
           )
@@ -78,9 +75,7 @@ export const Randomizer: React.FC<Session> = ({ manager, randomizer }): JSX.Elem
         {Locale.get('Randomize.Randomize')}
       </Button>
       {outcomes.length ? (
-        outcomes.map((outcome) => (
-          <RandomizerOutcome key={outcome.id} outcome={outcome} randomizer={randomizer} updateRandomizer={() => {}} />
-        ))
+        outcomes.map((outcome) => <RandomizerOutcome key={outcome.id} outcome={outcome} randomizer={randomizer} />)
       ) : (
         <></>
       )}

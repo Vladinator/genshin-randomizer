@@ -1,5 +1,6 @@
 import React from 'react';
-import SettingsIcon from '@mui/icons-material/Settings';
+import { Button } from '@mui/material';
+import { SettingsIcon } from './index';
 import type { Session } from '../../types';
 import { Locale } from '../../locale';
 import { Modal } from './modal';
@@ -7,7 +8,7 @@ import { SettingsList } from './settingslist';
 import { AppTabs } from './apptabs';
 
 export const SettingsToggle: React.FC<Session> = (props): JSX.Element => {
-  const { manager } = props;
+  const { manager, updateManager } = props;
   return (
     <Modal //
       dialogTitle={Locale.get('Settings.Settings')}
@@ -45,6 +46,29 @@ export const SettingsToggle: React.FC<Session> = (props): JSX.Element => {
                 }}
                 onAdd={() => manager.addCharacter('')}
               />
+            ),
+          },
+          {
+            tab: {
+              label: Locale.get('Settings.Utilities'),
+            },
+            panel: (
+              <>
+                <Button
+                  variant='contained'
+                  onClick={() => {
+                    const sortByName = <T extends { name: string }>(a: T, b: T): number => {
+                      return a.name.localeCompare(b.name);
+                    };
+                    manager.getBosses().sort(sortByName);
+                    manager.getCharacters().sort(sortByName);
+                    manager.getTeams().forEach((team) => team.characters.sort(sortByName));
+                    manager.getTeams().sort((a, b) => a.player.name.localeCompare(b.player.name));
+                    updateManager();
+                  }}>
+                  {Locale.get('Settings.SortAlphabetically')}
+                </Button>
+              </>
             ),
           },
         ]}

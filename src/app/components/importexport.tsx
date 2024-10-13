@@ -1,7 +1,6 @@
 import React from 'react';
 import { Button } from '@mui/material';
-import FileOpenIcon from '@mui/icons-material/FileOpen';
-import SaveIcon from '@mui/icons-material/Save';
+import { SaveIcon, FileOpenIcon } from './index';
 import { Locale } from '../../locale';
 import type { Session } from '../../types';
 import { copyToClipboard } from '../utils';

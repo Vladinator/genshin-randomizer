@@ -15,8 +15,10 @@ const DefaultLanguage = {
   },
   Settings: {
     Settings: 'Settings',
+    Utilities: 'Utilities',
     Bosses: 'Bosses',
     Characters: 'Characters',
+    SortAlphabetically: 'Sort everything alphabetically',
   },
   Players: {
     Edit: 'Edit',

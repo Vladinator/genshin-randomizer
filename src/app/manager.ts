@@ -75,6 +75,10 @@ class IManager {
     return this.settings;
   }
 
+  public getSetting(key: Setting['key']): Setting['value'] {
+    return this.settings.find((o) => o.key === key)?.value as never;
+  }
+
   public getBosses(skipIgnored?: boolean): ToggleBoss[] {
     if (skipIgnored) {
       return this.bosses.filter(isNotIgnored);
