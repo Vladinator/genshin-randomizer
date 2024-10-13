@@ -38,11 +38,31 @@ export class IRandomizer {
     this.outcomes = [];
   }
 
-  public load(manager: typeof Manager): void {
+  private cleanOrphans<T extends Team | ToggleBoss | ToggleCharacter>(lockedItems: T[], items: T[]) {
+    for (let i = lockedItems.length - 1; i >= 0; i--) {
+      const lockedItem = lockedItems[i];
+      let item = items.find((o) => o.id === lockedItem.id);
+      if (item) {
+        continue;
+      }
+      if ('player' in lockedItem) {
+        item = (items as Team[]).find((o) => o.player.id === lockedItem.player.id) as T;
+      }
+      if (item) {
+        continue;
+      }
+      lockedItems.splice(i, 1);
+    }
+  }
+
+  public load(manager: typeof Manager) {
     this.settings = manager.getSettings();
     this.bosses = manager.getBosses(true);
     this.characters = manager.getCharacters(true);
     this.teams = manager.getTeams();
+    this.cleanOrphans(this.lockedBosses, this.bosses);
+    this.cleanOrphans(this.lockedCharacters, this.characters);
+    this.cleanOrphans(this.lockedTeams, this.teams);
   }
 
   public static create(manager: typeof Manager): IRandomizer {
@@ -180,6 +200,10 @@ export class IRandomizer {
     return this.outcomes;
   }
 
+  public clearOutcomes() {
+    this.outcomes.splice(0, this.outcomes.length);
+  }
+
   public randomize(): IRandomizerOutcome[] {
     const settings = this.getSettingsKVP();
     const outcomes: IRandomizerOutcome[] = [...this.outcomes];
@@ -199,13 +223,23 @@ export class IRandomizer {
     return 'id' in outcome && 'bosses' in outcome && 'teams' in outcome;
   }
 
-  private removeUnlocked<T>(items: T[], predicate: (item: T) => T | undefined): void {
+  private removeUnlocked<T>(items: T[], predicate: (item: T) => T | undefined) {
     for (let i = items.length - 1; i >= 0; i--) {
       const item = items[i];
       if (predicate(item)) {
         continue;
       }
       items[i] = undefined as never;
+    }
+  }
+
+  private trimUndefined<T>(items: T[]) {
+    for (let i = items.length - 1; i >= 0; i--) {
+      const item = items[i];
+      if (item) {
+        continue;
+      }
+      items.splice(i, 1);
     }
   }
 
@@ -250,6 +284,8 @@ export class IRandomizer {
       }
       teams[i] = temp;
     }
+    this.trimUndefined(bosses);
+    this.trimUndefined(teams);
   }
 
   private getRandomBoss(outcome: IRandomizerOutcome, dupeBosses: boolean): ToggleBoss | undefined {

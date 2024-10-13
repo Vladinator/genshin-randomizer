@@ -5,7 +5,12 @@ import { Locale } from '../../locale';
 import type { Session } from '../../types';
 import { copyToClipboard } from '../utils';
 
-export const ImportExportButtons: React.FC<Session> = ({ manager, updateManager, setMessage }): JSX.Element => {
+export const ImportExportButtons: React.FC<Session> = ({
+  manager,
+  randomizer,
+  updateManager,
+  setMessage,
+}): JSX.Element => {
   return (
     <>
       <Button
@@ -43,6 +48,7 @@ export const ImportExportButtons: React.FC<Session> = ({ manager, updateManager,
             });
             return;
           }
+          randomizer.clearOutcomes();
           updateManager();
           setMessage({ text: Locale.get('ImportExport.ImportSuccess'), type: 'success', timeout: 3000 });
         }}>
