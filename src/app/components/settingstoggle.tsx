@@ -1,14 +1,15 @@
 import React from 'react';
-import { Button } from '@mui/material';
+import { Button, Grid2, Typography } from '@mui/material';
 import { SettingsIcon } from './index';
 import type { Session } from '../../types';
 import { Locale } from '../../locale';
+import { Storage } from '../storage';
 import { Modal } from './modal';
 import { SettingsList } from './settingslist';
 import { AppTabs } from './apptabs';
 
 export const SettingsToggle: React.FC<Session> = (props): JSX.Element => {
-  const { manager, updateManager } = props;
+  const { manager, randomizer, updateManager } = props;
   return (
     <Modal //
       dialogTitle={Locale.get('Settings.Settings')}
@@ -53,7 +54,7 @@ export const SettingsToggle: React.FC<Session> = (props): JSX.Element => {
               label: Locale.get('Settings.Utilities'),
             },
             panel: (
-              <>
+              <Grid2 container spacing={2} flexDirection={'column'}>
                 <Button
                   variant='contained'
                   onClick={() => {
@@ -68,7 +69,68 @@ export const SettingsToggle: React.FC<Session> = (props): JSX.Element => {
                   }}>
                   {Locale.get('Settings.SortAlphabetically')}
                 </Button>
-              </>
+                <Typography variant='h6'>{Locale.get('Settings.Reset')}</Typography>
+                <Button
+                  color='error'
+                  variant='outlined'
+                  onClick={() => {
+                    if (!window.confirm(Locale.get('Settings.ConfirmPurgeSettingsCache'))) return;
+                    Storage.clearSettings();
+                    manager.load();
+                    randomizer.clearOutcomes();
+                    updateManager();
+                  }}>
+                  {Locale.get('Settings.PurgeSettingsCache')}
+                </Button>
+                <Button
+                  color='error'
+                  variant='outlined'
+                  onClick={() => {
+                    if (!window.confirm(Locale.get('Settings.ConfirmPurgeBossCache'))) return;
+                    Storage.clearBosses();
+                    manager.load();
+                    randomizer.clearOutcomes();
+                    updateManager();
+                  }}>
+                  {Locale.get('Settings.PurgeBossCache')}
+                </Button>
+                <Button
+                  color='error'
+                  variant='outlined'
+                  onClick={() => {
+                    if (!window.confirm(Locale.get('Settings.ConfirmPurgeCharacterCache'))) return;
+                    Storage.clearCharacters();
+                    manager.load();
+                    randomizer.clearOutcomes();
+                    updateManager();
+                  }}>
+                  {Locale.get('Settings.PurgeCharacterCache')}
+                </Button>
+                <Button
+                  color='error'
+                  variant='outlined'
+                  onClick={() => {
+                    if (!window.confirm(Locale.get('Settings.ConfirmPurgePlayerCache'))) return;
+                    Storage.clearTeams();
+                    manager.load();
+                    randomizer.clearOutcomes();
+                    updateManager();
+                  }}>
+                  {Locale.get('Settings.PurgePlayerCache')}
+                </Button>
+                <Button
+                  color='error'
+                  variant='contained'
+                  onClick={() => {
+                    if (!window.confirm(Locale.get('Settings.ConfirmPurgeAllCache'))) return;
+                    Storage.clearAll();
+                    manager.load();
+                    randomizer.clearOutcomes();
+                    updateManager();
+                  }}>
+                  {Locale.get('Settings.PurgeAllCache')}
+                </Button>
+              </Grid2>
             ),
           },
         ]}

@@ -36,6 +36,7 @@ const CharacterCellContents: React.FC<Session & { team: Team; character: Charact
   return (
     <>
       <Autocomplete
+        style={{ minWidth: 222 + 48 }}
         disablePortal
         options={characters}
         getOptionKey={(option) => option.id}
@@ -108,43 +109,49 @@ export const PlayersTable: React.FC<Session> = (props): JSX.Element => {
       <Table aria-label={Locale.get('Players.Players')} size='small'>
         <TableHead>
           <TableRow>
-            {teams.map((team) => (
-              <TableCell key={team.id}>
-                {editing ? (
-                  <>
-                    <TextField
-                      value={team.player.name}
-                      onChange={(e) => {
-                        team.player.name = e.target.value;
-                        updateManager();
-                      }}
-                      variant='standard'
-                      size='small'
-                      slotProps={{
-                        input: {
-                          endAdornment: (
-                            <IconButton
-                              aria-label={Locale.get('Players.DeletePlayer')}
-                              onClick={() => {
-                                if (!window.confirm(Locale.get('Confirm.Delete', team.player.name))) return;
-                                manager.removeTeam(team);
-                                updateManager();
-                              }}
-                              color='error'>
-                              <DeleteIcon />
-                            </IconButton>
-                          ),
-                        },
-                      }}
-                    />
-                  </>
-                ) : (
-                  <Typography>
-                    <strong>{team.player.name}</strong>
-                  </Typography>
-                )}
-              </TableCell>
-            ))}
+            {teams.map((team) => {
+              const hasDuplicates = teams.reduce((pv, cv) => pv + (cv.player.name === team.player.name ? 1 : 0), 0) > 1;
+              return (
+                <TableCell key={team.id}>
+                  {editing ? (
+                    <>
+                      <TextField
+                        value={team.player.name}
+                        onChange={(e) => {
+                          team.player.name = e.target.value;
+                          updateManager();
+                        }}
+                        variant='standard'
+                        size='small'
+                        fullWidth={false}
+                        style={{ minWidth: 222 }}
+                        color={hasDuplicates ? 'error' : 'primary'}
+                        slotProps={{
+                          input: {
+                            endAdornment: (
+                              <IconButton
+                                aria-label={Locale.get('Players.DeletePlayer')}
+                                onClick={() => {
+                                  if (!window.confirm(Locale.get('Confirm.Delete', team.player.name))) return;
+                                  manager.removeTeam(team);
+                                  updateManager();
+                                }}
+                                color='error'>
+                                <DeleteIcon />
+                              </IconButton>
+                            ),
+                          },
+                        }}
+                      />
+                    </>
+                  ) : (
+                    <Typography color={hasDuplicates ? 'error' : 'textPrimary'}>
+                      <strong>{team.player.name}</strong>
+                    </Typography>
+                  )}
+                </TableCell>
+              );
+            })}
             <TableCell>
               {editing ? (
                 <IconButton
