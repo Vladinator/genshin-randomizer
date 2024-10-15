@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/genshin-randomizer/static/css/main.425eda57.css",
-    "main.js": "/genshin-randomizer/static/js/main.c147941c.js",
+    "main.js": "/genshin-randomizer/static/js/main.252ec403.js",
     "static/media/roboto-latin-700-normal.woff2": "/genshin-randomizer/static/media/roboto-latin-700-normal.4535474e1cf8598695ad.woff2",
     "static/media/roboto-latin-500-normal.woff2": "/genshin-randomizer/static/media/roboto-latin-500-normal.7077203b1982951ecf76.woff2",
     "static/media/roboto-latin-400-normal.woff2": "/genshin-randomizer/static/media/roboto-latin-400-normal.297d48e1b5a10c0831a9.woff2",
@@ -60,10 +60,10 @@
     "static/media/roboto-greek-ext-400-normal.woff": "/genshin-randomizer/static/media/roboto-greek-ext-400-normal.16eb83b4a3b1ea994243.woff",
     "index.html": "/genshin-randomizer/index.html",
     "main.425eda57.css.map": "/genshin-randomizer/static/css/main.425eda57.css.map",
-    "main.c147941c.js.map": "/genshin-randomizer/static/js/main.c147941c.js.map"
+    "main.252ec403.js.map": "/genshin-randomizer/static/js/main.252ec403.js.map"
   },
   "entrypoints": [
     "static/css/main.425eda57.css",
-    "static/js/main.c147941c.js"
+    "static/js/main.252ec403.js"
   ]
 }
